@@ -193,19 +193,20 @@ class Dataset(MethodMixin):
             },
         }
 
+
+        datatype_key = datatype.upper()
+        try:
+            datatype = datatypes[datatype.lower()]
+        except KeyError:
+            raise AttributeError('The "%s" data type is not allowed' % datatype)
+
+        try:
+            datafunction = datatype[function]
+        except KeyError:
+            raise AttributeError('"%s" is not a valid function method for %s data' %
+                                (function, datatype_key))
+
         if zipped_file is None:
-
-            datatype_key = datatype.upper()
-            try:
-                datatype = datatypes[datatype.lower()]
-            except KeyError:
-                raise AttributeError('The "%s" data type is not allowed' % datatype)
-
-            try:
-                datafunction = datatype[function]
-            except KeyError:
-                raise AttributeError('"%s" is not a valid function method for %s data' %
-                                    (function, datatype_key))
 
             if isinstance(datafile_paths, basestring):
                 datafile_paths = [datafile_paths, None, None]
@@ -223,8 +224,8 @@ class Dataset(MethodMixin):
 
         else:
             self.message('...uploading compressed data from zipped file')
-            b64Data = zipped_file
-
+            b64data = zipped_file
+            labels_b64data = None
         try:
             if function == 'update':
                 datafunction(key=self.user.key, datasetGuid=self.select_dataset(dataset),
@@ -281,9 +282,12 @@ class Dataset(MethodMixin):
     #        raise AttributeError('Please specify a ZIP file')
     #    return self.append_spss(datafile_path=datafile_path, dataset=dataset)
 
-    def update_sss(self, metadatafile_path, datafile_path, labelsfile_path=None, dataset=None, save_as=None, zipped_file=None):
+    def update_sss_with_zip(self, zipped_file=None):
+        return self.__update(None, datatype='sss', zipped_file=zipped_file)
+
+    def update_sss(self, metadatafile_path, datafile_path, labelsfile_path=None, dataset=None, save_as=None):
         datafile = [datafile_path, metadatafile_path, labelsfile_path]
-        return self.__update(datafile, dataset=dataset, datatype='sss', save_as=save_as, zipped_file=zipped_file)
+        return self.__update(datafile, dataset=dataset, datatype='sss', save_as=save_as)
 
     def append_sss(self, metadatafile_path, datafile_path, dataset=None, save_as=None):
         datafile = [datafile_path, metadatafile_path]
