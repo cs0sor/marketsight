@@ -15,7 +15,8 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    # TODO: put package requirements here
+    'suds==0.4',
+    'wsgiref==0.1.2'
 ]
 
 test_requirements = [
@@ -31,10 +32,10 @@ setup(
     author_email='simon@electrosoup.co.uk',
     url='https://github.com/cs0sor/marketsightapi',
     packages=[
-        'marketsightapi',
+        'marketsightapi'
     ],
     package_dir={'marketsightapi':
-                 'marketsightapi'},
+                 'marketsight'},
     include_package_data=True,
     install_requires=requirements,
     license="ISCL",
