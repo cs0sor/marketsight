@@ -1,17 +1,16 @@
-import datetime
-import uuid
 import base64
+import datetime
 import logging
 import os.path
-import urlparse
 import urllib
+import urlparse
+import uuid
 from collections import OrderedDict
 
 import suds.client
 
 from .config import URLS
 from .helpers import datafile_to_base64, files_to_zipped_base64
-
 
 #Enable SUDS logger
 logging.getLogger('suds.client').setLevel(logging.CRITICAL)
@@ -161,7 +160,7 @@ class Dataset(MethodMixin):
         try:
             datafunction = datatype[function]
         except KeyError:
-            raise AttributeError('"%s" is not a valid function method for %s data' % 
+            raise AttributeError('"%s" is not a valid function method for %s data' %
                                 (function, datatype_key))
 
         if isinstance(datafile_paths, basestring):
@@ -180,7 +179,7 @@ class Dataset(MethodMixin):
             return False
         return True
 
-    def __update(self, datafile_paths, dataset=None, datatype='spss', function='update', save_as=None):
+    def __update(self, datafile_paths, dataset=None, datatype='spss', function='update', save_as=None, zipped_file=None):
         datatypes = {
             'spss': {
                 #'update': self.client.service.UpdateDatasetDataSPSSZipped,
@@ -194,31 +193,37 @@ class Dataset(MethodMixin):
             },
         }
 
-        datatype_key = datatype.upper()
-        try:
-            datatype = datatypes[datatype.lower()]
-        except KeyError:
-            raise AttributeError('The "%s" data type is not allowed' % datatype)
+        if zipped_file is None:
 
-        try:
-            datafunction = datatype[function]
-        except KeyError:
-            raise AttributeError('"%s" is not a valid function method for %s data' % 
-                                (function, datatype_key))
+            datatype_key = datatype.upper()
+            try:
+                datatype = datatypes[datatype.lower()]
+            except KeyError:
+                raise AttributeError('The "%s" data type is not allowed' % datatype)
 
-        if isinstance(datafile_paths, basestring):
-            datafile_paths = [datafile_paths, None, None]
-        if len(datafile_paths) == 2:
-            datafile_paths.append(None)
-        labelsfile_path = datafile_paths.pop(2)
+            try:
+                datafunction = datatype[function]
+            except KeyError:
+                raise AttributeError('"%s" is not a valid function method for %s data' %
+                                    (function, datatype_key))
 
-        self.message('...gathering %s data from "%s"' % (datatype_key, datafile_paths[0]))
-        b64data = datafile_to_base64(datafile_paths, datatype=datatype_key, save_as=save_as)
-        labels_b64data = None
-        if labelsfile_path:
-            self.message('...gathering labels XML data')
-            labels_b64data = files_to_zipped_base64([labelsfile_path])
-        self.message('...uploading compressed %s data' % datatype_key)
+            if isinstance(datafile_paths, basestring):
+                datafile_paths = [datafile_paths, None, None]
+            if len(datafile_paths) == 2:
+                datafile_paths.append(None)
+            labelsfile_path = datafile_paths.pop(2)
+
+            self.message('...gathering %s data from "%s"' % (datatype_key, datafile_paths[0]))
+            b64data = datafile_to_base64(datafile_paths, datatype=datatype_key, save_as=save_as)
+            labels_b64data = None
+            if labelsfile_path:
+                self.message('...gathering labels XML data')
+                labels_b64data = files_to_zipped_base64([labelsfile_path])
+                self.message('...uploading compressed %s data' % datatype_key)
+
+        else:
+            self.message('...uploading compressed data from zipped file')
+            b64Data = zipped_file
 
         try:
             if function == 'update':
@@ -233,7 +238,7 @@ class Dataset(MethodMixin):
         return True
 
     def __append(self, datafile_paths, dataset=None, datatype='spss', save_as=None):
-        return self.__update(datafile_paths=datafile_paths, dataset=dataset, 
+        return self.__update(datafile_paths=datafile_paths, dataset=dataset,
                              datatype=datatype, function='append', save_as=save_as)
 
     def number_of_respondents(self, dataset=None):
@@ -254,8 +259,8 @@ class Dataset(MethodMixin):
     def check_for_missing_variables(self, variables, dataset=None):
         try:
             return self.parse_list(
-            self.client.service.CheckForMissingVariables(key=self.user.key, 
-                            datasetGuid=self.select_dataset(dataset), 
+            self.client.service.CheckForMissingVariables(key=self.user.key,
+                            datasetGuid=self.select_dataset(dataset),
                             variableList=','.join(self.parse_list(variables))))
         except suds.WebFault as details:
             self.message('An error ocurred\n%s' % details)
@@ -276,9 +281,9 @@ class Dataset(MethodMixin):
     #        raise AttributeError('Please specify a ZIP file')
     #    return self.append_spss(datafile_path=datafile_path, dataset=dataset)
 
-    def update_sss(self, metadatafile_path, datafile_path, labelsfile_path=None, dataset=None, save_as=None):
+    def update_sss(self, metadatafile_path, datafile_path, labelsfile_path=None, dataset=None, save_as=None, zipped_file=None):
         datafile = [datafile_path, metadatafile_path, labelsfile_path]
-        return self.__update(datafile, dataset=dataset, datatype='sss', save_as=save_as)
+        return self.__update(datafile, dataset=dataset, datatype='sss', save_as=save_as, zipped_file=zipped_file)
 
     def append_sss(self, metadatafile_path, datafile_path, dataset=None, save_as=None):
         datafile = [datafile_path, metadatafile_path]
@@ -294,13 +299,13 @@ class Dataset(MethodMixin):
     #        raise AttributeError('Please specify a ZIP file')
     #    return self.append_sss(datafile_path=datafile_path, dataset=dataset)
 
-    
+
 class ReportURL(object):
     """A convience class for construction of Remote Report Access URLS"""
     base_url = URLS.get('reports')
     export_types = {
-        'crosstab': ('excel', 'excel2007', 'pdf', 'etabs'), 
-        'datatable': ('excel', 'excel2007'), 
+        'crosstab': ('excel', 'excel2007', 'pdf', 'etabs'),
+        'datatable': ('excel', 'excel2007'),
         'chart': ('image', 'excel', 'powerpoint', 'powerpoint2007'),
         }
     modes = {
@@ -323,7 +328,7 @@ class ReportURL(object):
             raise AttributeError('"%s" is not a valid MarketSight ID' % id)
         except ValueError:
             raise AttributeError('"%s" is not a valid MarketSight ID' % id)
-    
+
     def __init__(self, url_type, id, user=None, mode=None, export=None, rows=None, columns=None):
         self.url_type = url_type
         self.user = user
@@ -344,7 +349,7 @@ class ReportURL(object):
     @property
     def id(self):
         return self._id
-    
+
     @id.setter
     def id(self, id):
         if id is None:
@@ -359,7 +364,7 @@ class ReportURL(object):
     @property
     def mode(self):
         return self._mode
-    
+
     @mode.setter
     def mode(self, mode):
         self._mode = self.modes.get(mode.lower(),'ReadOnly')
@@ -367,7 +372,7 @@ class ReportURL(object):
     @property
     def url_type(self):
         return self._url_type
-    
+
     @url_type.setter
     def url_type(self, url_type):
         if url_type.lower() in self.url_types:
@@ -378,7 +383,7 @@ class ReportURL(object):
     @property
     def export(self):
         return self._export
-    
+
     @export.setter
     def export(self, export):
         if export is not None:
@@ -410,11 +415,11 @@ class Report(object):
 
     def __init__(self, user=None):
         self.user = user
-    
+
     def chart(self, id, mode='ReadOnly', export=None):
         url = self.url_factory('chart', id, user=self.user, mode=mode, export=export)
         return url.geturl()
-    
+
     def datatable(self, id, mode='ReadOnly', export=None):
         url = self.url_factory('datatable', id, user=self.user, mode=mode, export=export)
         return url.geturl()
