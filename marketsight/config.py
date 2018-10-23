@@ -5,5 +5,3 @@ URLS = {
     'upload': os.environ.get('MARKETSIGHT_UPLOAD_ENDPOINT', 'https://application.marketsight.com/MarketSightWebServices/DatasetUploadService.asmx?WSDL'),
     'reports': os.environ.get('MARKETSIGHT_REVIEW_ENDPOINT', 'https://application.marketsight.com/MktgWorksite/ItemView.aspx'),
 }
-
-import ipdb; ipdb.set_trace()
