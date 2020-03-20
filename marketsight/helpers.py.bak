@@ -1,9 +1,6 @@
-from future import standard_library
-standard_library.install_aliases()
-from past.builtins import basestring
 import os
 import zipfile
-import io
+import StringIO
 import base64
 
 
@@ -15,7 +12,7 @@ def files_to_zipped_data(filenames):
         filepath, short_filename = os.path.split(full_filename)
         files_to_zip.append((full_filename, short_filename))
 
-    datafile_zipped = io.StringIO()
+    datafile_zipped = StringIO.StringIO()
     with zipfile.ZipFile(datafile_zipped, mode='w') as zipper:
         for f,fn in files_to_zip:
             zipper.write(f, arcname=fn, compress_type=zipfile.ZIP_DEFLATED)
@@ -72,7 +69,7 @@ def datafile_to_base64(datafile_paths, datatype='spss', save_as=None):
         with zipfile.ZipFile(datafile, mode='r') as datafile_zipped:
             files_in_zip = [os.path.splitext(f)[1].lower() for f in datafile_zipped.namelist()]
             if not set(datatype.values()) == set(files_in_zip):
-                raise TypeError('An %s ZIP file only allows one %s file.' % (datatype_key, ' and '.join(list(datatype.values()))))
+                raise TypeError('An %s ZIP file only allows one %s file.' % (datatype_key, ' and '.join(datatype.values())))
 
         with open(datafile,'rb') as f:
             f.seek(0)
