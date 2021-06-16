@@ -24,23 +24,23 @@ test_requirements = [
 ]
 
 setup(
-    name='marketsightapi',
+    name='marketsight',
     version='0.1.0',
     description="simple python wrapper round marketsight API",
     long_description=readme + '\n\n' + history,
     author="Simon Oram",
     author_email='simon@electrosoup.co.uk',
-    url='https://github.com/cs0sor/marketsightapi',
+    url='https://github.com/cs0sor/marketsight',
     packages=[
-        'marketsightapi'
+        'marketsight'
     ],
-    package_dir={'marketsightapi':
+    package_dir={'marketsight':
                  'marketsight'},
     include_package_data=True,
     install_requires=requirements,
     license="ISCL",
     zip_safe=False,
-    keywords='marketsightapi',
+    keywords='marketsight',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
