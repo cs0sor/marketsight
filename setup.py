@@ -15,7 +15,7 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
 requirements = [
-    'suds==0.4',
+    'suds==1.0.0',
     'wsgiref==0.1.2'
 ]
 
